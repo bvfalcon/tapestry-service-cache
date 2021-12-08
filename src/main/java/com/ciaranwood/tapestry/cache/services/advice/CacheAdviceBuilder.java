@@ -1,18 +1,14 @@
 package com.ciaranwood.tapestry.cache.services.advice;
 
-import com.ciaranwood.tapestry.cache.services.annotations.CacheKey;
-import com.ciaranwood.tapestry.cache.services.annotations.CacheResult;
-import com.ciaranwood.tapestry.cache.services.impl.SwitchingCacheWriter;
 import net.sf.ehcache.Ehcache;
-import net.sf.ehcache.writer.CacheWriter;
 import org.apache.tapestry5.ioc.ServiceResources;
 import org.apache.tapestry5.plastic.MethodAdvice;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
 public class CacheAdviceBuilder<T> {
 
+    @SuppressWarnings("unused")
     private final T delegate;
     private final ServiceResources resources;
     private final Ehcache ehcache;

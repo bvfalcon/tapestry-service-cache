@@ -1,51 +1,73 @@
 package com.ciaranwood.tapestry.cache.services.impl;
 
-import com.ciaranwood.tapestry.cache.services.CacheWriterClassFactory;
-import net.sf.ehcache.Ehcache;
-import org.apache.tapestry5.ioc.services.ClassFab;
-import org.apache.tapestry5.ioc.services.ClassFactory;
-import org.apache.tapestry5.ioc.services.MethodSignature;
-import org.apache.tapestry5.ioc.util.BodyBuilder;
-
-import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.apache.tapestry5.ioc.services.PlasticProxyFactory;
+import org.apache.tapestry5.plastic.ClassInstantiator;
+import org.apache.tapestry5.plastic.ConstructorCallback;
+import org.apache.tapestry5.plastic.InstanceContext;
+import org.apache.tapestry5.plastic.InstructionBuilder;
+import org.apache.tapestry5.plastic.InstructionBuilderCallback;
+import org.apache.tapestry5.plastic.PlasticField;
+import org.apache.tapestry5.plastic.PlasticUtils;
+
+import com.ciaranwood.tapestry.cache.services.CacheWriterClassFactory;
+
+import lombok.extern.slf4j.Slf4j;
+import net.sf.ehcache.Ehcache;
+
+@Slf4j
 public class CacheWriterClassFactoryImpl implements CacheWriterClassFactory {
+    private final PlasticProxyFactory classFactory;
+    private final Map<String, CacheWriterBridges> bridgesToCacheName = new HashMap<>();
 
-    private final ClassFactory classFactory;
-    private final Map<String, CacheWriterBridges> bridgesToCacheName = new HashMap<String, CacheWriterBridges>();
-
-    public CacheWriterClassFactoryImpl(ClassFactory classFactory) {
+    public CacheWriterClassFactoryImpl(PlasticProxyFactory classFactory) {
         this.classFactory = classFactory;
     }
 
-    public <T> void add(Ehcache cache, Class<T> serviceInterface, T instance, Method write, String methodKey) {
-        ClassFab classFab = classFactory.newClass(CacheWriterBridge.class);
-        classFab.addField("instance", serviceInterface);
-        classFab.addConstructor(new Class[]{ serviceInterface }, null, "instance = $1;");
-
-        BodyBuilder writeBody = new BodyBuilder();
-        writeBody.begin();
-        writeBody.addln("instance.%s((%s) $1, (%s) $2);",
-                write.getName(), write.getParameterTypes()[0].getName(), write.getParameterTypes()[1].getName());
-        writeBody.end();
-        classFab.addMethod(Modifier.PUBLIC,
-                new MethodSignature(void.class, "write", new Class[] {Object.class, Object.class}, null),
-                writeBody.toString());
-
-        Class newClass = classFab.createClass();
-
+    @Override
+    public <T> void add(Ehcache cache, final Class<T> serviceInterface, T instance, Method write, String methodKey) {
+        ClassInstantiator<CacheWriterBridge> classInstantialor = classFactory.createProxy(CacheWriterBridge.class, plasticClass -> {
+                final String fieldName = "instance";
+                PlasticField field = plasticClass.introduceField(serviceInterface, fieldName);
+                plasticClass.onConstruct(new ConstructorCallback() {
+                    @Override
+                    public void onConstruct(Object methodInstance, InstanceContext context) {
+                        try {
+                            Field reflectionField = methodInstance.getClass().getDeclaredField(fieldName);
+                            reflectionField.setAccessible(true);
+                            reflectionField.set(methodInstance, instance);
+                        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+                            log.error(e.getMessage(), e);
+                        }
+                    }
+                });
+                plasticClass.introduceMethod(
+                        PlasticUtils.getMethodDescription(CacheWriterBridge.class, "write", java.lang.Object.class, java.lang.Object.class),
+                        new InstructionBuilderCallback() {
+                    @Override
+                    public void doBuild(InstructionBuilder builder) {
+                        builder
+                            .loadThis().getField(field)
+                            .loadArgument(0).castOrUnbox(PlasticUtils.toTypeName(write.getParameterTypes()[0]))
+                            .loadArgument(1).castOrUnbox(PlasticUtils.toTypeName(write.getParameterTypes()[1]))
+                            .invoke(write);
+                        builder.returnResult();
+                    }
+                });
+            });
         try {
-            Constructor constructor = newClass.getConstructor(serviceInterface);
-            CacheWriterBridge bridge = (CacheWriterBridge) constructor.newInstance(instance);
+            CacheWriterBridge bridge = classInstantialor.newInstance();
             putBridge(cache.getName(), methodKey, bridge);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
     }
 
+    @Override
     public CacheWriterBridges getCacheWriterBridges(Ehcache cache) {
         return bridgesToCacheName.get(cache.getName());
     }
@@ -60,5 +82,4 @@ public class CacheWriterClassFactoryImpl implements CacheWriterClassFactory {
 
         bridges.put(methodKey, bridge);
     }
-
 }

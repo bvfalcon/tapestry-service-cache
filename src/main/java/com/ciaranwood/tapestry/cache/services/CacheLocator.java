@@ -3,6 +3,8 @@ package com.ciaranwood.tapestry.cache.services;
 import java.io.Serializable;
 
 public class CacheLocator implements Serializable {
+    private static final long serialVersionUID = -353706682223896708L;
+
     private final String methodKey;
     private final Object keyParameterValue;
 

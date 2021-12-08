@@ -12,15 +12,18 @@ public class TestServiceImpl implements TestService {
     private int counter2 = 0;
     private Map<String, Integer> counterUsingKey = new HashMap<String, Integer>();
 
+    @Override
     @CacheResult
     public String cacheThis() {
         return "counter: " + counter1++;
     }
 
+    @Override
     public String dontCacheThis() {
         return "counter: " + counter2++;
     }
 
+    @Override
     @CacheResult
     public String cacheThisUsingKey(@CacheKey String key) {
         if(!counterUsingKey.containsKey(key)) {

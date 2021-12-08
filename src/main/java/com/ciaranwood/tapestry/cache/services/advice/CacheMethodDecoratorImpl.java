@@ -35,7 +35,7 @@ public class CacheMethodDecoratorImpl implements CacheMethodDecorator {
         for(CachedMethodPair methodPair : new CachedMethodPairsLocator(serviceInterface, resources)) {
 
             Ehcache cache = getCache(methodPair.getCacheName(), resources.getServiceId());
-            CacheAdviceBuilder adviceBuilder = new CacheAdviceBuilder<T>(delegate, resources, cache);
+            CacheAdviceBuilder<T> adviceBuilder = new CacheAdviceBuilder<>(delegate, resources, cache);
             String methodKey = methodPair.getMethodKey();
 
             Method read = methodPair.getReadMethod();

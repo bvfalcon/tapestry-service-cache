@@ -17,7 +17,7 @@ public class SwitchingCacheWriter extends AbstractCacheWriter {
 
     @Override
     public void write(Element element) throws CacheException {
-        CacheLocator locator = (CacheLocator) element.getKey();
+        CacheLocator locator = (CacheLocator) element.getObjectKey();
 
         CacheWriterBridge bridge = bridges.get(locator.getMethodKey());
 

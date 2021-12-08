@@ -21,25 +21,26 @@ public class CacheMethodAdvice implements MethodAdvice {
         this.methodKey = methodKey;
     }
 
+    @Override
     public void advise(MethodInvocation invocation) {
         CacheLocator key = getKeyForInvocation(invocation);
         Element cached = cache.get(key);
         if(cached == null) {
             log.debug("cache miss for {} using cache {}", key, cache.getName());
             try
-			{
-				invocation.proceed();
-				Object result = invocation.getReturnValue();
-				cache.put(new Element(key, result));
-			}
-			catch (Throwable throwable)
-			{
-				cache.put(new Element(key, null));
-				throw throwable;
-			}
+            {
+                invocation.proceed();
+                Object result = invocation.getReturnValue();
+                cache.put(new Element(key, result));
+            }
+            catch (Throwable throwable)
+            {
+                cache.put(new Element(key, null));
+                throw throwable;
+            }
             log.debug("cached result of {} using cache {}", key, cache.getName());
         } else {
-            invocation.setReturnValue(cached.getValue());
+            invocation.setReturnValue(cached.getObjectValue());
             log.debug("cache hit for {} using cache {}", key, cache.getName());
         }
     }

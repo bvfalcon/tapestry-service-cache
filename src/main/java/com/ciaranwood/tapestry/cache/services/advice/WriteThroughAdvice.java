@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 public class WriteThroughAdvice implements MethodAdvice {
 
     private final Ehcache cache;
+    @SuppressWarnings("unused")
     private final Logger log;
     private final int cacheKeyParameterIndex;
     private final int dataParameterIndex;
@@ -23,6 +24,7 @@ public class WriteThroughAdvice implements MethodAdvice {
         this.methodKey = methodKey;
     }
 
+    @Override
     public void advise(MethodInvocation invocation) {
         Object key = invocation.getParameter(cacheKeyParameterIndex);
         Object data = invocation.getParameter(dataParameterIndex);

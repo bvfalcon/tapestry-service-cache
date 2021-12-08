@@ -15,10 +15,11 @@ public class BlockingCacheFactory implements CacheFactory {
 
     public BlockingCacheFactory(@Inject @Symbol(ServiceCacheConstants.EHCACHE_CONFIGURATION_FILE) String configFileUrl,
                                 @Inject @Symbol(ServiceCacheConstants.BLOCKING_CACHE_TIMEOUT) int timeout) {
-        this.cacheManager = new CacheManager(getClass().getResource(configFileUrl));
+        this.cacheManager = CacheManager.create(getClass().getResource(configFileUrl));
         this.timeout = timeout;
     }
 
+    @Override
     public Ehcache getCache(String cacheName) {
         if(!cacheManager.cacheExists(cacheName)) {
            cacheManager.addCache(cacheName);

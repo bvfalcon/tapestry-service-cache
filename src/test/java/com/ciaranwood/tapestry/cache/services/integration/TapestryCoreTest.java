@@ -4,7 +4,7 @@ import com.ciaranwood.tapestry.cache.services.ServiceCacheModule;
 import com.ciaranwood.tapestry.cache.services.TestModule;
 import org.apache.tapestry5.ioc.Registry;
 import org.apache.tapestry5.ioc.RegistryBuilder;
-import org.apache.tapestry5.services.TapestryModule;
+import org.apache.tapestry5.modules.TapestryModule;
 import org.junit.Test;
 
 public class TapestryCoreTest {

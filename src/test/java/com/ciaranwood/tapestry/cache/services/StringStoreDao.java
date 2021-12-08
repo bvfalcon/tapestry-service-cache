@@ -12,11 +12,13 @@ public class StringStoreDao implements StringDao {
         this.store = store;
     }
 
+    @Override
     @CacheResult
     public String get(@CacheKey Integer key) {
         return store.get(key);
     }
 
+    @Override
     @WriteThrough
     public void put(@CacheKey Integer key, String data) {
         store.put(key, data);

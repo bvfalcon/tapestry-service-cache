@@ -1,10 +1,10 @@
 package com.ciaranwood.tapestry.cache.services;
 
-import com.ciaranwood.tapestry.cache.services.impl.CacheWriterBridges;
-import net.sf.ehcache.Ehcache;
-import net.sf.ehcache.writer.CacheWriter;
-
 import java.lang.reflect.Method;
+
+import com.ciaranwood.tapestry.cache.services.impl.CacheWriterBridges;
+
+import net.sf.ehcache.Ehcache;
 
 public interface CacheWriterClassFactory {
     
